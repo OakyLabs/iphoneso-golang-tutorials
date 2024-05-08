@@ -2,154 +2,112 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/fonsogms/iphoneso/person"
+	"sync"
+	"time"
 )
 
-/*
-interface withWheels {
-	printAmountOfWheels(): void
-}
-
-class Car implements withWheels {
-	age: number
-	model: string
-	color: string
-
-
-	printAmountOfWheels() {
-		console.log(4)
-	}
-}
-*/
-
-type car struct {
-	age   int
-	model string
-	color string
-}
-
-type Alfonso struct {
-	age  string
-	from string
+type Pokemon struct {
+	// json tags <-> go and json
+	// on the left side (you have the golang representation)
+	// on the right side you have the key of the json
+	PokemonName string `json:"name"` // json tag: tells golang what name to get it from the json object
+	Order       int
 }
 
 // func main() {
-func (c car) PrintAmountOfWheels() {
-	fmt.Println("I have 4 wheels")
-}
+// 	url := "https://pokeapi.co/api/v2/pokemon/ditto"
 
-func (this Alfonso) PrintAmountOfWheels() {
-	fmt.Println("I am not something with wheels")
-}
+// 	request, err := http.NewRequest("GET", url, nil)
 
-type withWheels interface {
-	PrintAmountOfWheels()
-}
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-func doBirthday(birthdayHaver person.HasBirthday) {
-	birthdayHaver.Birthday()
-}
+// 	client := &http.Client{}
 
-// fn
-// fun
-// def
+// 	response, err := client.Do(request)
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// ditto := make(map[string]any)
+// 	ditto := Pokemon{}
+
+// 	err = json.NewDecoder(response.Body).Decode(&ditto)
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	ditto.PokemonName = "Alfonso"
+
+// 	// {
+// 	// 	name: "Alfonso",
+// 	// 	order: 214
+// 	// }
+// 	fmt.Printf("%+v\n", ditto)
+
+// 	bytes, err := json.Marshal(&ditto)
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	fmt.Println(string(bytes))
+// }
+
+// go routines
+
 func main() {
-	p := person.Person{31, false}
+	wg := &sync.WaitGroup{}
+	for i := 0; i <= 100; i++ {
+		wg.Add(1)
+		go printAndSleep(i, wg)
+	}
 
-	doBirthday(&p)
+	wg.Wait()
 
-	fmt.Println(fmt.Sprintf("The Person before birthday %+v", p))
+	fmt.Println("Done with everything")
 
-	p.Birthday()
+	// these are channels also known as a subcriber
+	c1 := make(chan int)
+	c2 := make(chan int)
 
-	fmt.Println(fmt.Sprintf("The Person after birthday %+v", p))
-	p.DeathDay()
-	fmt.Println(fmt.Sprintf("The Person after DeathDay %+v", p))
-	// propertyEstruct := attempt.Estruct{
-	// 	Property: 55,
-	// }
-	// // var aCar car
-	// aCar := car{
-	// 	age:   13,
-	// 	model: "Auris",
-	// 	color: "red",
-	// }
+	go func() {
+		time.Sleep(2 * time.Second)
 
-	// printWheels(aCar)
-	// printWheels(propertyEstruct)
+		// this is how you call an event in a channel
+		c1 <- 420
+	}()
 
-	// // System.out.println
-	// // console.log
-	// // print
-	// // fmt.Println
-	// /*
-	// 	Syntax for comments
-	// */
+	go func() {
+		time.Sleep(time.Second)
+		c2 <- 10
+		c2 <- 30
+	}()
 
-	// fmt.Println("Hello, world!")
+outer:
+	for {
+		select {
+		//with select you check for events called on each channel
+		case channel1Result := <-c1:
+			fmt.Println("Received from c1", channel1Result)
+			break outer
+		case channel2Result := <-c2:
+			fmt.Println("Received from c2", channel2Result)
+			// break
+		}
+	}
 
-	// var variable1 string = "A variable"
-	// fmt.Println("Variable 1, value: ", variable1)
-	// var variable2 string
-	// fmt.Println("Variable 2, value: ", len(variable2))
-	// variable2 = "Another variable"
-	// fmt.Println("Variable 2, value: ", variable2)
-	// variable3 := "Another another variable"
-	// fmt.Println("Variable 3, value: ", variable3)
+	close(c1)
+	close(c2)
 
-	// floats := 3.14
-
-	// result := floats + 5
-
-	// fmt.Println(result)
-
-	// _ = map[string]string{
-	// 	"alfonso":        "garcia",
-	// 	"espannnnnnnnha": "esspain",
-	// }
-
-	// _ = true || false
-
-	// // TODO: Check undefined - pointers
-
-	// // slices
-	// slice := []int{6, 1, 2, 3}
-
-	// // value := append(slice, 8)
-
-	// slice = append(slice, 5)
-	// _ = []int{7, 1, 2, 4}
-	// // arrays
-
-	// _ = [5]int{1, 2, 3, 4, 5}
-
-	// // { 1 }
-
-	// fmt.Println(sayHello("Alfonso"))
-
-	// _, _ = twoThings()
-
-	// _, _ = useState()
+	fmt.Println("Done")
 }
 
-func sayHello(name string) string {
-	return "hello " + name
+func printAndSleep(i int, wg *sync.WaitGroup) {
+	fmt.Println(i)
+	time.Sleep(time.Second * 3)
+	wg.Done()
 }
-
-func twoThings() (bool, string) {
-	return false, "hello"
-}
-
-func useState() (string, func()) {
-	return "", func() {}
-}
-
-func printWheels(somethingWithWheels withWheels) {
-	somethingWithWheels.PrintAmountOfWheels()
-}
-
-// return { }
-
-// { name: string, age: int }
-// {name; "", age: 0}
