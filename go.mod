@@ -1,3 +1,3 @@
-module github.com/fonsogms/iphoneso
+module pokemonso
 
 go 1.22.2
